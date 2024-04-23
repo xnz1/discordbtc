@@ -1,80 +1,85 @@
+# Complete and corrected code for the Bitcoin price check Discord bot as a Python file
+
+
 import discord
 from discord.ext import commands
 import requests
-import datetime
+from datetime import datetime
 
-
-BOT_TOKEN = ''  
+BOT_TOKEN = ''  # Add your Discord bot token here
 COINGECKO_API_URL_USD = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
 COINGECKO_API_URL_BRL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=brl"
 
-#Define Intents
-intents = discord.Intents.default()  # Defaults enable all non-privileged intents
-intents.message_content = True  # Subscribe to messages for commands
-intents.guilds = True    # For handling events within guilds
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
 
-# Initialize the bot with intents
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Global variable to store the last checked price
-last_price = None
-
-
-
-
-
-
-    
+price_history_usd = {}
+price_history_brl = {}
 
 def fetch_bitcoin_priceUSD():
-    """Fetch the current Bitcoin price from the CoinGecko API."""
     response = requests.get(COINGECKO_API_URL_USD)
     data = response.json()
-    return data['bitcoin']['usd']
+    price = data['bitcoin']['usd']
+    price_history_usd[datetime.now()] = price
+    return price
 
 def fetch_bitcoin_priceBRL():
-    """Fetch the current Bitcoin price from the CoinGecko API."""
     response = requests.get(COINGECKO_API_URL_BRL)
     data = response.json()
-    return data['bitcoin']['brl']
-    
-    
+    price = data['bitcoin']['brl']
+    price_history_brl[datetime.now()] = price
+    return price
 
-@bot.command(name='bitcoinusd', help='Displays the current price of Bitcoin and if it is up or down since the last check.')
-async def bitcoin(ctx):
-    global last_price
+def calculate_trend_and_percentage_change(price_history):
+    if len(price_history) < 2:
+        return "Not enough data to determine the trend."
+    sorted_timestamps = sorted(price_history.keys())
+    latest_timestamp = sorted_timestamps[-1]
+    previous_timestamp = sorted_timestamps[-2]
+    latest_price = price_history[latest_timestamp]
+    previous_price = price_history[previous_timestamp]
+    if previous_price != 0:
+        percentage_change = ((latest_price - previous_price) / previous_price) * 100
+    else:
+        percentage_change = 0
+    trend = "up" if latest_price > previous_price else "down" if latest_price < previous_price else "stable"
+    return f"Bitcoin price is {trend} by {abs(percentage_change):.2f}% since the last check."
+
+def bitcoinusd_command(price_history_usd):
     current_price = fetch_bitcoin_priceUSD()
-    if last_price is not None:
-        trend = "up" if current_price > last_price else "down"
-        message = f"The current Bitcoin price is ${current_price:.2f} (It's {trend}!)"
+    if len(price_history_usd) > 1:
+        trend_message = calculate_trend_and_percentage_change(price_history_usd)
+        message = f"The current Bitcoin price is ${current_price:.2f}. {trend_message}"
     else:
         message = f"The current Bitcoin price is ${current_price:.2f}."
-    await ctx.send(message)
-    last_price = current_price
+    return message
 
-@bot.command(name='bitcoinbrl', help='Displays the current price of Bitcoin and if it is up or down since the last check.')
-async def bitcoin(ctx):
-    global last_price
+def bitcoinbrl_command(price_history_brl):
     current_price = fetch_bitcoin_priceBRL()
-    if last_price is not None:
-        trend = "up" if current_price > last_price else "down"
-        message = f"The current Bitcoin price is R${current_price:.2f} (It's {trend}!)"
+    if len(price_history_brl) > 1:
+        trend_message = calculate_trend_and_percentage_change(price_history_brl)
+        message = f"The current Bitcoin price is R${current_price:.2f}. {trend_message}"
     else:
         message = f"The current Bitcoin price is R${current_price:.2f}."
+    return message
+
+@bot.command(name='bitcoinusd', help='Displays the current price of Bitcoin in USD and trend information.')
+async def bitcoinusd(ctx):
+    message = bitcoinusd_command(price_history_usd)
     await ctx.send(message)
-    last_price = current_price
 
-
-def timeFormatter(time):
-    currentDate = "{}/{}/{}".format(time.strftime("%Y"), time.strftime("%m"), time.strftime("%d"))
-    currentTime = "{}:{}".format(time.strftime("%H"), time.strftime("%M"))
-
-    return f"{currentDate} at {currentTime}"
+@bot.command(name='bitcoinbrl', help='Displays the current price of Bitcoin in BRL and trend information.')
+async def bitcoinbrl(ctx):
+    message = bitcoinbrl_command(price_history_brl)
+    await ctx.send(message)
 
 
 
+    
+    bot.run(BOT_TOKEN)
 
 
 
-# Run the bot
-bot.run('')  # This line must be at the root level, not inside any function or conditional
