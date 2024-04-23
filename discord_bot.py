@@ -3,12 +3,12 @@ from discord.ext import commands
 import requests
 import datetime
 
-# Constants and global variables
-BOT_TOKEN = 'MTIyODE0NjE2ODQ0NjU4Mjg5Ng.GnoG5N.Oi_K4d7cx5DYHUA5lnxMOG7Ag2j4IIjvLymU9w'  # Replace with your actual Discord bot token
+
+BOT_TOKEN = ''  
 COINGECKO_API_URL_USD = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
 COINGECKO_API_URL_BRL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=brl"
 
-# Define Intents
+#Define Intents
 intents = discord.Intents.default()  # Defaults enable all non-privileged intents
 intents.message_content = True  # Subscribe to messages for commands
 intents.guilds = True    # For handling events within guilds
@@ -77,4 +77,4 @@ def timeFormatter(time):
 
 
 # Run the bot
-bot.run("MTIyODE0NjE2ODQ0NjU4Mjg5Ng.GnoG5N.Oi_K4d7cx5DYHUA5lnxMOG7Ag2j4IIjvLymU9w")  # This line must be at the root level, not inside any function or conditional
+bot.run('')  # This line must be at the root level, not inside any function or conditional
