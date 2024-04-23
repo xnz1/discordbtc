@@ -1,2 +1,3 @@
 # discordbtc
-Discord Bitcoin Bot.
+Discord bitcoin bot made with Python.
+Still in progress...
